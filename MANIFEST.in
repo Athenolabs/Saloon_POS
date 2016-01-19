@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include saloon *.css
+recursive-include saloon *.csv
+recursive-include saloon *.html
+recursive-include saloon *.ico
+recursive-include saloon *.js
+recursive-include saloon *.json
+recursive-include saloon *.md
+recursive-include saloon *.png
+recursive-include saloon *.py
+recursive-include saloon *.svg
+recursive-include saloon *.txt
+recursive-exclude saloon *.pyc

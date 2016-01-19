@@ -1,0 +1,5 @@
+{
+	"js/saloon.min.js": [
+		"public/js/pos/saloon_pos.js"
+	]
+}
