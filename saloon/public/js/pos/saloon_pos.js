@@ -470,15 +470,16 @@ erpnext.pos.PointOfSale = Class.extend({
 
 				// if (dialog.get_value("mode_of_payment")=='Cash'){
 					// <div class='col-sm-3'>Image</div>\
+					// <div class='col-sm-3'>Value</div>\
 					$("<div id='currency_dialog'>\
-					<div class='thead'><div class='row'>\
-	  				<div class='col-sm-3'>Label</div>\
-	  				<div class='col-sm-3'>Value</div>\
-	  				<div class='col-sm-3'>Received</div>\
-	  				<div class='col-sm-3'>Returned</div>\
-	  				</div></div>\
-	  				<div><hr></div>\
-	  				<div class='tbody'></div>\
+						<div class='row'>\
+  							<div class='col-xs-3'>Label</div>\
+  							<div class='col-xs-3'>Received</div>\
+  							<div class='col-xs-3'>Returned</div>\
+  							<div class='col-xs-3'>Amount</div>\
+  						</div>\
+  						<hr>\
+	  					<div class='tbody'></div>\
 	  				</div>").appendTo($(dialog.fields_dict.rec_ret.wrapper))
 
 					frappe.call({
@@ -489,17 +490,27 @@ erpnext.pos.PointOfSale = Class.extend({
 						callback: function(r) {
 							for(var curr=0;curr<r.message.length;curr++){
 								// <div class='col-sm-3 img'><img src="+r.message[curr].image+" class='img-circle' alt='Cinque Terre' width='50' height='30'></div>\
-								$("<div class='trow'><div class='col-sm-3 lbl'>"+r.message[curr].label+"</div>\
-	  							<div class='col-sm-3 cur_val'>"+r.message[curr].value+"</div>\
-	  							<div class='col-sm-3 rec'><input class='form-control received' type='text' value='0'></div>\
-	  							<div class='col-sm-3 ret'><input class='form-control return' type='text' value='0'></div></div>")
-								.appendTo($("#currency_dialog .tbody"))
+								// <div class='col-sm-3 cur_val'>"+r.message[curr].value+"</div>\
+								$("<div class='trow row'>\
+									<div class='col-xs-3 lbl'>"+r.message[curr].label+"</div>\
+	  								<div class='col-xs-3 rec'><input class='form-control received' type='text' value='0'></div>\
+	  								<div class='col-xs-3 ret'><input class='form-control return' type='text' value='0'></div>\
+	  								<div class='col-xs-3 amt'>0</div>\
+	  								<div class='hidden val'>"+r.message[curr].value+"</div>\
+	  							</div>").appendTo($("#currency_dialog .tbody"))
 							}
 
 							// me.total_received(dialog);
 							// $(dialog.wrapper).find("#currency_dialog").find(".received").change(function(){
 							// 	me.total_received(dialog);
 							// })
+							
+							$(dialog.wrapper).find("#currency_dialog").find(".received").change(function(){
+								me.calculate_amount(this);
+							})
+							$(dialog.wrapper).find("#currency_dialog").find(".return").change(function(){
+								me.calculate_amount(this);
+							})
 
 							// $(dialog.wrapper).find("#currency_dialog").find(".return").change(function(){
 							// 	me.total_received(dialog);
@@ -531,6 +542,15 @@ erpnext.pos.PointOfSale = Class.extend({
 				me.set_pay_button(dialog);
 			});
 		}
+	},
+
+	calculate_amount:function(cur_this){	
+		rec_val=$(cur_this).parent().parent().find(".received").val();
+		ret_val=$(cur_this).parent().parent().find(".return").val();
+		value=$(cur_this).parent().parent().find(".val").text();
+		ret_amount=parseFloat(ret_val)*parseFloat(value);
+		rec_amount=parseFloat(rec_val)*parseFloat(value);
+		$(cur_this).parent().parent().find(".amt").text(rec_amount - ret_amount)
 	},
 
 	total_received: function(dialog){
@@ -568,9 +588,10 @@ erpnext.pos.PointOfSale = Class.extend({
 					{
 						data_dict["label"]=$(div_row).find(".lbl").text();
 						// data_dict["image"]=$(div_row).find(".img").html();
-						data_dict["value"]=$(div_row).find(".cur_val").text();
+						// data_dict["value"]=$(div_row).find(".cur_val").text();
 						data_dict["received"]=$(div_row).find(".rec .received").val();
 						data_dict["return"]=$(div_row).find(".ret .return").val();
+						data_dict["amount"]=$(div_row).find(".amt").text();
 						child_list.push(data_dict);
 					}
 				})
@@ -581,9 +602,10 @@ erpnext.pos.PointOfSale = Class.extend({
 					var d = frappe.model.add_child(me.frm.doc, "Invoice Currency Denomination", "currency_denomination");
 					d.label=child_list[item].label;
 					// d.image=child_list[item].image;
-					d.value=child_list[item].value;
+					// d.value=child_list[item].value;
 					d.received=child_list[item].received;
 					d.return=child_list[item].return;
+					d.amount=child_list[item].amount;
 				}
 				refresh_field("currency_denomination");
 			}
