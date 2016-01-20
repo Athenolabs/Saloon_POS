@@ -5,7 +5,6 @@ frappe.provide("erpnext.pos");
 
 erpnext.pos.PointOfSale = Class.extend({
 	init: function(wrapper, frm) {
-		console.log("helooo")
 		this.wrapper = wrapper;
 		this.frm = frm;
 		this.wrapper.html(frappe.render_template("pos", {currency: this.frm.currency}));
@@ -58,7 +57,7 @@ erpnext.pos.PointOfSale = Class.extend({
 				"fieldtype": "Link",
 				"options": this.party,
 				"label": this.party,
-				"fieldname": "pos_party",
+				"fieldname": this.party.toLowerCase(),
 				"placeholder": this.party
 			},
 			parent: this.wrapper.find(".party-area"),
@@ -405,7 +404,6 @@ erpnext.pos.PointOfSale = Class.extend({
 		}
 	},
 	make_payment: function() {
-		console.log("hiii")
 		var me = this;
 		var no_of_items = this.frm.doc.items.length;
 
@@ -417,15 +415,18 @@ erpnext.pos.PointOfSale = Class.extend({
 				// prefer cash payment!
 				var default_mode = me.frm.doc.mode_of_payment ? me.frm.doc.mode_of_payment :
 					me.modes_of_payment.indexOf(__("Cash"))!==-1 ? __("Cash") : undefined;
+					
+				var smallest_currency_fraction_value = flt(frappe.model.get_value(":Currency", 
+					me.frm.doc.currency, "smallest_currency_fraction_value"))
 
 				// show payment wizard
 				var dialog = new frappe.ui.Dialog({
-					width: 500,
+					width: 400,
 					title: 'Payment',
 					fields: [
 						{fieldtype:'Currency',
-							fieldname:'total_amount', label: __('Total Amount'), read_only:1,
-							"default": me.frm.doc.grand_total, read_only: 1},
+							fieldname:'total_amount', label: __('Total Amount'),
+							"default": me.frm.doc.grand_total},
 						{fieldtype:'Select', fieldname:'mode_of_payment',
 							label: __('Mode of Payment'),
 							options: me.modes_of_payment.join('\n'), reqd: 1,
@@ -438,7 +439,18 @@ erpnext.pos.PointOfSale = Class.extend({
 						{fieldtype:'Currency', fieldname:'paid_amount', label:__('Amount Paid'),
 							reqd:1, "default": me.frm.doc.grand_total, hidden: 1, change: function() {
 								var values = dialog.get_values();
-								dialog.set_value("change", Math.round(values.paid_amount - values.total_amount));
+								
+								var actual_change = flt(values.paid_amount - values.total_amount, 
+									precision("paid_amount"));
+								
+								if (actual_change > 0) {
+									var rounded_change = actual_change - remainder(actual_change, 
+										smallest_currency_fraction_value, precision("paid_amount"));
+								} else {
+									var rounded_change = 0;
+								}
+								
+								dialog.set_value("change", rounded_change);
 								dialog.get_input("change").trigger("change");
 
 							}},
@@ -455,14 +467,15 @@ erpnext.pos.PointOfSale = Class.extend({
 					]
 				});
 				me.dialog = dialog;
+
 				// if (dialog.get_value("mode_of_payment")=='Cash'){
+					// <div class='col-sm-3'>Image</div>\
 					$("<div id='currency_dialog'>\
 					<div class='thead'><div class='row'>\
 	  				<div class='col-sm-3'>Label</div>\
-	  				<div class='col-sm-3'>Image</div>\
-	  				<div class='col-sm-2'>Value</div>\
-	  				<div class='col-sm-2'>Received</div>\
-	  				<div class='col-sm-2'>Returned</div>\
+	  				<div class='col-sm-3'>Value</div>\
+	  				<div class='col-sm-3'>Received</div>\
+	  				<div class='col-sm-3'>Returned</div>\
 	  				</div></div>\
 	  				<div><hr></div>\
 	  				<div class='tbody'></div>\
@@ -475,11 +488,11 @@ erpnext.pos.PointOfSale = Class.extend({
 						},
 						callback: function(r) {
 							for(var curr=0;curr<r.message.length;curr++){
+								// <div class='col-sm-3 img'><img src="+r.message[curr].image+" class='img-circle' alt='Cinque Terre' width='50' height='30'></div>\
 								$("<div class='trow'><div class='col-sm-3 lbl'>"+r.message[curr].label+"</div>\
-	  							<div class='col-sm-3 img'><img src="+r.message[curr].image+" class='img-circle' alt='Cinque Terre' width='50' height='30'></div>\
-	  							<div class='col-sm-2 cur_val'>"+r.message[curr].value+"</div>\
-	  							<div class='col-sm-2 rec'><input class='form-control received' type='text' value='0'></div>\
-	  							<div class='col-sm-2 ret'><input class='form-control return' type='text' value='0'></div></div>")
+	  							<div class='col-sm-3 cur_val'>"+r.message[curr].value+"</div>\
+	  							<div class='col-sm-3 rec'><input class='form-control received' type='text' value='0'></div>\
+	  							<div class='col-sm-3 ret'><input class='form-control return' type='text' value='0'></div></div>")
 								.appendTo($("#currency_dialog .tbody"))
 							}
 
@@ -496,7 +509,7 @@ erpnext.pos.PointOfSale = Class.extend({
 				// }
 
 				dialog.show();
-				
+
 				// make read only
 				dialog.get_input("total_amount").prop("disabled", true);
 				dialog.get_input("write_off_amount").prop("disabled", true);
@@ -507,7 +520,6 @@ erpnext.pos.PointOfSale = Class.extend({
 					dialog.get_field("paid_amount").toggle(is_cash);
 					dialog.get_field("change").toggle(is_cash);
 					dialog.get_field("rec_ret").toggle(is_cash);
-
 
 					if (is_cash && !dialog.get_value("change")) {
 						// set to nearest 5
@@ -520,6 +532,7 @@ erpnext.pos.PointOfSale = Class.extend({
 			});
 		}
 	},
+
 	total_received: function(dialog){
 		var total_received=0
 		var total_return=0
@@ -535,6 +548,7 @@ erpnext.pos.PointOfSale = Class.extend({
 		dialog.set_value("change", Math.round(paid_amount - values.total_amount));
 		dialog.get_input("change").trigger("change");
 	},
+
 	set_pay_button: function(dialog) {
 		var me = this;
 		dialog.set_primary_action(__("Pay"), function() {
@@ -553,7 +567,7 @@ erpnext.pos.PointOfSale = Class.extend({
 					if($(div_row).find(".rec .received").val()!='0' || $(div_row).find(".ret .return").val()!='0')
 					{
 						data_dict["label"]=$(div_row).find(".lbl").text();
-						data_dict["image"]=$(div_row).find(".img").html();
+						// data_dict["image"]=$(div_row).find(".img").html();
 						data_dict["value"]=$(div_row).find(".cur_val").text();
 						data_dict["received"]=$(div_row).find(".rec .received").val();
 						data_dict["return"]=$(div_row).find(".ret .return").val();
@@ -566,7 +580,7 @@ erpnext.pos.PointOfSale = Class.extend({
 				{
 					var d = frappe.model.add_child(me.frm.doc, "Invoice Currency Denomination", "currency_denomination");
 					d.label=child_list[item].label;
-					d.image=child_list[item].image;
+					// d.image=child_list[item].image;
 					d.value=child_list[item].value;
 					d.received=child_list[item].received;
 					d.return=child_list[item].return;
