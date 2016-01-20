@@ -483,14 +483,14 @@ erpnext.pos.PointOfSale = Class.extend({
 								.appendTo($("#currency_dialog .tbody"))
 							}
 
-							me.total_received(dialog);
-							$(dialog.wrapper).find("#currency_dialog").find(".received").change(function(){
-								me.total_received(dialog);
-							})
+							// me.total_received(dialog);
+							// $(dialog.wrapper).find("#currency_dialog").find(".received").change(function(){
+							// 	me.total_received(dialog);
+							// })
 
-							$(dialog.wrapper).find("#currency_dialog").find(".return").change(function(){
-								me.total_received(dialog);
-							})
+							// $(dialog.wrapper).find("#currency_dialog").find(".return").change(function(){
+							// 	me.total_received(dialog);
+							// })
 						}
 					});
 				// }
@@ -547,18 +547,19 @@ erpnext.pos.PointOfSale = Class.extend({
 
 			child_list=[];
 			if (is_cash) {
-				cur_row=$(dialog.wrapper).find("#currency_dialog .trow")
+				cur_row=$(dialog.wrapper).find("#currency_dialog .trow");
 				$.each(cur_row,function(i,div_row){
 					data_dict={};
-					data_dict["label"]=$(div_row).find(".lbl").text();
-					// data_dict["image"]=$(div_row).find(".img img").attr('src');
-					data_dict["image"]=$(div_row).find(".img").html();
-					data_dict["value"]=$(div_row).find(".cur_val").text();
-					data_dict["received"]=$(div_row).find(".rec .received").val();
-					data_dict["return"]=$(div_row).find(".ret .return").val();
-					child_list.push(data_dict);
+					if($(div_row).find(".rec .received").val()!='0' || $(div_row).find(".ret .return").val()!='0')
+					{
+						data_dict["label"]=$(div_row).find(".lbl").text();
+						data_dict["image"]=$(div_row).find(".img").html();
+						data_dict["value"]=$(div_row).find(".cur_val").text();
+						data_dict["received"]=$(div_row).find(".rec .received").val();
+						data_dict["return"]=$(div_row).find(".ret .return").val();
+						child_list.push(data_dict);
+					}
 				})
-
 			}
 			if(child_list){
 				for(var item=0;item<child_list.length;item++)
