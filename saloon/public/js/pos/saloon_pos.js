@@ -493,8 +493,8 @@ erpnext.pos.PointOfSale = Class.extend({
 								// <div class='col-sm-3 cur_val'>"+r.message[curr].value+"</div>\
 								$("<div class='trow row'>\
 									<div class='col-xs-3 lbl'>"+r.message[curr].label+"</div>\
-	  								<div class='col-xs-3 rec'><input class='form-control received' type='text' value='0'></div>\
-	  								<div class='col-xs-3 ret'><input class='form-control return' type='text' value='0'></div>\
+	  								<div class='col-xs-3 rec'><input class='form-control received' type='number' value=0 min=0 ></div>\
+	  								<div class='col-xs-3 ret'><input class='form-control return' type='number' value =0 min=0></div>\
 	  								<div class='col-xs-3 amt'>0</div>\
 	  								<div class='hidden val'>"+r.message[curr].value+"</div>\
 	  							</div>").appendTo($("#currency_dialog .tbody"))
@@ -504,7 +504,12 @@ erpnext.pos.PointOfSale = Class.extend({
 							// $(dialog.wrapper).find("#currency_dialog").find(".received").change(function(){
 							// 	me.total_received(dialog);
 							// })
-							
+							$(dialog.wrapper).find('input[type="number"]').keyup(function (){
+								if(!$(this).val().match(/^[0-9]+/)){
+									frappe.msgprint("Input must be integer value")
+								}
+							})
+
 							$(dialog.wrapper).find("#currency_dialog").find(".received").change(function(){
 								me.calculate_amount(this);
 							})
@@ -545,8 +550,8 @@ erpnext.pos.PointOfSale = Class.extend({
 	},
 
 	calculate_amount:function(cur_this){	
-		rec_val=$(cur_this).parent().parent().find(".received").val();
-		ret_val=$(cur_this).parent().parent().find(".return").val();
+		rec_val=$(cur_this).parent().parent().find(".received").val() || 0;
+		ret_val=$(cur_this).parent().parent().find(".return").val() || 0;
 		value=$(cur_this).parent().parent().find(".val").text();
 		ret_amount=parseFloat(ret_val)*parseFloat(value);
 		rec_amount=parseFloat(rec_val)*parseFloat(value);

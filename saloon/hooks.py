@@ -109,4 +109,4 @@ app_include_js = "assets/js/saloon.min.js"
 # 	"frappe.desk.doctype.event.event.get_events": "saloon.event.get_events"
 # }
 
-fixtures = ["Custom Field","Property Setter"]
+fixtures = ["Custom Field"]
