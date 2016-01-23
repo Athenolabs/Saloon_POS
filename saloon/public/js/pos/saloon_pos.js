@@ -504,10 +504,11 @@ erpnext.pos.PointOfSale = Class.extend({
 							// $(dialog.wrapper).find("#currency_dialog").find(".received").change(function(){
 							// 	me.total_received(dialog);
 							// })
-							$(dialog.wrapper).find('input[type="number"]').keyup(function (){
-								if(!$(this).val().match(/^[0-9]+/)){
-									frappe.msgprint("Input must be integer value")
-								}
+							$(dialog.wrapper).find('input[type="number"]').change(function (){
+									if(!(/^\+?\d+$/.test($(this).val()))){
+										$(this).val(0)
+										frappe.msgprint("Input must be integer value")
+									}
 							})
 
 							$(dialog.wrapper).find("#currency_dialog").find(".received").change(function(){
