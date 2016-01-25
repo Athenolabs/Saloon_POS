@@ -602,6 +602,11 @@ erpnext.pos.PointOfSale = Class.extend({
 					}
 				})
 			}
+
+			if(me.frm.doc.currency_denomination){
+				me.frm.doc.currency_denomination='';
+			}
+
 			if(child_list){
 				for(var item=0;item<child_list.length;item++)
 				{
@@ -665,6 +670,11 @@ erpnext.pos.toggle = function(frm, show) {
 			|| (show===false && frm.page.current_view_name === "main")) {
 			return;
 		}
+	}
+
+	if (frm.page.current_view_name === "pos" && frm.doc.docstatus!=1) {
+		frm.doc.currency_denomination='';
+		refresh_field("currency_denomination")
 	}
 
 	if(frm.page.current_view_name!=="pos") {
