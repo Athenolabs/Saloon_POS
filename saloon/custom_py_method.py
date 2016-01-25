@@ -3,5 +3,5 @@ import frappe
 
 @frappe.whitelist()
 def get_currency_domination(currency):
-	return frappe.db.sql("""select label,value from `tabCurrency Denomination` where parent=%s""",currency, as_dict=1)
+	return frappe.db.sql("""select label,value from `tabCurrency Denomination` where parent=%s order by value """,currency, as_dict=1)
 	
